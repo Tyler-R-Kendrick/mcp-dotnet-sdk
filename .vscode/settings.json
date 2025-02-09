@@ -1,0 +1,6 @@
+{
+    "chat.agent.enabled": true,
+    "chat.promptsFiles": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000
+}
