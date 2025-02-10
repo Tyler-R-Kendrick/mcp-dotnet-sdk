@@ -5,15 +5,18 @@ using System.ComponentModel.DataAnnotations;
 namespace Abstractions.Models;
 
     // Base Notification Type
-    public interface INotification
+    public interface INotification : IMessage
+    {
+    }
+
+    public interface INotification<TParams> : INotification
     {
         [Required]
-        [Description("The method indicating the type of notification.")]
-        string Method { get; init; }
+        TParams Params { get; }
     }
     
     // CancelledNotification
-    public record CancelledNotification : INotification, IClientNotification, IServerNotificaiton
+    public record CancelledNotification : INotification<CancelledNotification.Parameters>, IClientNotification, IServerNotificaiton
     {
         [Required]
         [Description("The method indicating a cancelled notification.")]
@@ -112,14 +115,16 @@ namespace Abstractions.Models;
     }
 
     // ResourceListChangedNotification
-    public record ResourceListChangedNotification : INotification
+    public record ResourceListChangedNotification(
+        ResourceListChangedNotification.Parameters Params)
+        : INotification<ResourceListChangedNotification.Parameters>, IServerNotificaiton
     {
         [Required]
         [Description("The method indicating a resource list changed notification.")]
         public string Method { get; init; } = "notifications/resources/list_changed";
 
         [Description("Additional metadata for the resource list changed notification.")]
-        public Parameters Params { get; init; } = new Parameters();
+        public Parameters Params { get; init; } = Params;
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -128,31 +133,35 @@ namespace Abstractions.Models;
     }
 
     // ResourceUpdatedNotification
-    public record ResourceUpdatedNotification : INotification, IServerNotificaiton
+    public record ResourceUpdatedNotification(
+        ResourceUpdatedNotification.Parameters Params)
+        : INotification<ResourceUpdatedNotification.Parameters>, IServerNotificaiton
     {
         [Required]
         [Description("The method indicating a resource updated notification.")]
         public string Method { get; init; } = "notifications/resources/updated";
 
         [Required]
-        public Parameters Params { get; init; } = new Parameters();
+        public Parameters Params { get; init; } = Params;
         public record Parameters
         {
             [Required]
             [Description("The URI of the updated resource.")]
-            public Uri Uri { get; init; } = new Uri("http://example.com");
+            public required Uri Uri { get; init; }
         }
     }
 
     // PromptListChangedNotification
-    public record PromptListChangedNotification : INotification, IServerNotificaiton
+    public record PromptListChangedNotification(
+        PromptListChangedNotification.Parameters Params)
+        : INotification<PromptListChangedNotification.Parameters>, IServerNotificaiton
     {
         [Required]
         [Description("The method indicating a prompt list changed notification.")]
-        public string Method { get; init; } = "notifications/prompts/list_changed";
+        public string Method { get; private init; } = "notifications/prompts/list_changed";
 
         [Description("Additional metadata for the prompt list changed notification.")]
-        public Parameters Params { get; init; } = new Parameters();
+        public Parameters Params { get; init; } = Params;
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -161,14 +170,16 @@ namespace Abstractions.Models;
     }
 
     // ToolListChangedNotification
-    public record ToolListChangedNotification : INotification, IServerNotificaiton
+    public record ToolListChangedNotification(
+        ToolListChangedNotification.Parameters Params)
+        : INotification<ToolListChangedNotification.Parameters>, IServerNotificaiton
     {
         [Required]
         [Description("The method indicating a tool list changed notification.")]
-        public string Method { get; init; } = "notifications/tools/list_changed";
+        public string Method { get; private init; } = "notifications/tools/list_changed";
 
         [Description("Additional metadata for the tool list changed notification.")]
-        public Parameters Params { get; init; } = new Parameters();
+        public Parameters Params { get; init; } = Params;
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -177,19 +188,21 @@ namespace Abstractions.Models;
     }
 
     // LoggingMessageNotification
-    public record LoggingMessageNotification
+    public record LoggingMessageNotification(
+        LoggingMessageNotification.Parameters Params)
+        : INotification<LoggingMessageNotification.Parameters>, IServerNotificaiton
     {
         [Required]
         [Description("The method indicating a logging message notification.")]
-        public string Method { get; init; } = "notifications/message";
+        public string Method { get; private init; } = "notifications/message";
 
         [Required]
-        public Parameters Params { get; init; } = new Parameters();
+        public Parameters Params { get; init; } = Params;
         public record Parameters
         {
             [Required]
             [Description("The severity level of the log message.")]
-            public LoggingLevel Level { get; init; }
+            public LoggingLevel Level { get; init; } = LoggingLevel.Critical;
 
             [Required]
             [Description("The actual data to be logged.")]

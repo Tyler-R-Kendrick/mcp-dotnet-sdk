@@ -47,13 +47,11 @@ namespace Abstractions.Models;
 public interface ITransport
 {
     Task StartAsync(CancellationToken cancellationToken);
-    Task SendAsync(IRequest message, CancellationToken cancellationToken);
-    Task CloseAsync(CancellationToken cancellationToken)
-    {
-        //GeneratedNamespace.MyGeneratedClass.MyGeneratedMethod();
-        return Task.CompletedTask;
-    }
+    Task<TResult> SendAsync<TResult>(
+        IMessage message,
+        CancellationToken cancellationToken);
+    Task CloseAsync(CancellationToken cancellationToken);
     event Action OnClose;
     event Action<Exception> OnError;
-    event Action<IRequest> OnMessage;
+    event Action<IMessage> OnMessage;
 }

@@ -2,71 +2,90 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Abstractions.Models;
+
+public interface IMessage
+{
+    
+    [Required]
+    [Description("The method indicating the type of message.")]
+    string Method { get; }
+}
+public interface IParams
+{
+}
+public interface IMessage<TParams> : IMessage
+{
+    [Required]
+    [Description("The params object to supply to the request")]
+    TParams Params { get; init; }
+}
+
     // Base Request Type
-    public interface IRequest
+    public interface IRequest : IMessage
+    {
+    }
+    public interface IRequest<TParams> : IMessage<TParams>
+    {
+    }
+
+    public record BaseRequest(string Method) : IRequest
     {
         [Required]
-        [Description("The method to identify the type of request.")]
-        string Method { get; init; }
+        [Description("The method to request.")]
+        public string Method { get; private init; } = Method;
+    }
+
+    public record BaseRequest<TParams>(
+        string Method,
+        TParams Params)
+        : BaseRequest(Method), IRequest<TParams>
+    {
+        [Description("The parameters to supply to the request.")]
+        public TParams Params { get; init; } = Params;
     }
 
     // InitializeRequest
-    public record InitializeRequest : IRequest, IClientRequest
+    public record InitializeRequest(
+        InitializeRequest.Parameters Params)
+        : BaseRequest<InitializeRequest.Parameters>("initialize", Params), IClientRequest
     {
-        [Required]
-        [Description("The method to initialize the request.")]
-        public string Method { get; init; } = "initialize";
+        public record Parameters : IParams
+        {
+            [Required]
+            public ClientCapabilities Capabilities { get; init; } = new();
 
-        [Required]
-        public InitializeParams Params { get; init; } = new InitializeParams();
-    }
+            [Required]
+            public Implementation ClientInfo { get; init; } = new();
 
-    public record InitializeParams
-    {
-        [Required]
-        public ClientCapabilities Capabilities { get; init; } = new ClientCapabilities();
-
-        [Required]
-        public Implementation ClientInfo { get; init; } = new Implementation();
-
-        [Required]
-        [Description("The protocol version supported by the client.")]
-        public string ProtocolVersion { get; init; } = "1.0";
+            [Required]
+            [Description("The protocol version supported by the client.")]
+            public string ProtocolVersion { get; init; } = "1.0";
+        }
     }
 
     // PingRequest
-    public record PingRequest : Request
+    public record PingRequest() : BaseRequest("ping"), IClientRequest
     {
-        [Required]
-        [Description("The method to identify a ping request.")]
-        public override string Method { get; init; } = "ping";
     }
 
     // ListRootsRequest
-    public record ListRootsRequest : IRequest
+    public record ListRootsRequest(
+        ListRootsRequest.Parameters Params)
+        : BaseRequest<ListRootsRequest.Parameters>("roots/list", Params), IClientRequest
     {
-        [Required]
-        [Description("The method to request a list of roots.")]
-        public string Method { get; init; } = "roots/list";
-
-        public ListRootsParams? Params { get; init; }
+        public record Parameters : IParams
+        {
+            [Description("Optional metadata for the list roots request.")]
+            public Dictionary<string, object>? Meta { get; init; }
+        }
     }
 
-    public record ListRootsParams
-    {
-        [Description("Optional metadata for the list roots request.")]
-        public Dictionary<string, object>? Meta { get; init; }
-    }
-
-public abstract record Request : IRequest
-{
-    public abstract string Method { get; init; }
-}
-public abstract record PaginatedRequest : Request
+public abstract record PaginatedRequest(string Method) : BaseRequest(Method)
 {
     [Description("The pagination cursor for the request.")]
     public string? Cursor { get; init; }
 }
+
 // /* Resources */
 // /**
 //  * Sent from the client to request a list of resources the server has.
@@ -74,26 +93,18 @@ public abstract record PaginatedRequest : Request
 // export interface ListResourcesRequest extends PaginatedRequest {
 //   method: "resources/list";
 // }
-public record ListResourcesRequest : PaginatedRequest, IRequest, IClientRequest
+public record ListResourcesRequest()
+    : PaginatedRequest("resources/list"), IClientRequest
 {
-    [Required]
-    [Description("The method to request a list of resources.")]
-    public override string Method { get; init; } = "resources/list";
 }
 
 
     // CallToolRequest
-    public record CallToolRequest : IRequest
-    {
-        [Required]
-        [Description("The method to invoke a tool.")]
-        public string Method { get; init; } = "tools/call";
-
-        [Required]
-        public CallToolParams Params { get; init; } = new CallToolParams();
-    }
-
-    public record CallToolParams
+public record CallToolRequest(
+    CallToolRequest.Parameters Params)
+    : BaseRequest<CallToolRequest.Parameters>("tools/call", Params), IClientRequest
+{
+    public record Parameters
     {
         [Required]
         [Description("The name of the tool to be invoked.")]
@@ -102,6 +113,7 @@ public record ListResourcesRequest : PaginatedRequest, IRequest, IClientRequest
         [Description("The arguments required for invoking the tool.")]
         public Dictionary<string, object>? Arguments { get; init; }
     }
+}
 
 // /**
 //  * Sent from the client to the server, to read a specific resource URI.
@@ -117,19 +129,15 @@ public record ListResourcesRequest : PaginatedRequest, IRequest, IClientRequest
 //     uri: string;
 //   };
 // }
-public record ReadResourceRequest : IRequest
+public record ReadResourceRequest(
+    ReadResourceRequest.Parameters Params)
+    : BaseRequest<ReadResourceRequest.Parameters>("resources/read", Params), IClientRequest
 {
-    [Required]
-    [Description("The method indicating a read resource request.")]
-    public string Method { get; init; } = "resources/read";
-
-    [Required]
-    public Parameters Params { get; init; } = new Parameters();
     public record Parameters
     {
         [Required]
         [Description("The URI of the resource to read.")]
-        public Uri Uri { get; init; } = new Uri("http://example.com");
+        public required Uri Uri { get; init; }
     }
 }
 
@@ -140,43 +148,23 @@ public record ReadResourceRequest : IRequest
 // export interface ListResourceTemplatesRequest extends PaginatedRequest {
 //   method: "resources/templates/list";
 // }
-public record ListResourceTemplatesRequest : IRequest
+public record ListResourceTemplatesRequest() : BaseRequest("resources/templates/list")
 {
-    [Required]
-    [Description("The method to request a list of resource templates.")]
-    public string Method { get; init; } = "resources/templates/list";
 }
 
-// /**
-//  * The server's response to a resources/templates/list request from the client.
-//  */
-// export interface ListResourceTemplatesResult extends PaginatedResult {
-//   resourceTemplates: ResourceTemplate[];
-// }
-public record ListResourceTemplatesResult : PaginatedResult, IResult
+
+// SubscribeRequest
+public record SubscribeRequest(
+    SubscribeRequest.Parameters Params)
+    : BaseRequest<SubscribeRequest.Parameters>("resources/subscribe", Params)
 {
-    [Required]
-    [Description("The list of resource templates available.")]
-    public List<ResourceTemplate> ResourceTemplates { get; init; } = new();
-}
-
-    // SubscribeRequest
-    public record SubscribeRequest : IRequest
-    {
-        [Required]
-        [Description("The method to subscribe to resource updates.")]
-        public string Method { get; init; } = "resources/subscribe";
-
-        [Required]
-        public SubscribeParams Params { get; init; } = new SubscribeParams();
-    }
-
-    public record SubscribeParams
+    public record Parameters
     {
         [Required]
         [Description("The URI of the resource to subscribe to.")]
-        public Uri Uri { get; init; } = new Uri("http://example.com");
+        public required Uri Uri { get; init; }
     }
+}
 
     // UnsubscribeRequest
     public record UnsubscribeRequest : IRequest
@@ -261,45 +249,20 @@ public record ListResourceTemplatesResult : PaginatedResult, IResult
         public override string Type { get; init; } = "ref/resource";
     }
 
-    public record CreateMessageRequest : IRequest
+    public record CreateMessageRequest(CreateMessageParams Params)
+        : IRequest<CreateMessageParams>
     {
         [Required]
         [Description("The method for creating a message.")]
-        public string Method { get; init; } = "messages/create";
+        public string Method { get; private init; } = "messages/create";
 
         [Required]
-        public CreateMessageParams Params { get; init; } = new CreateMessageParams();
+        public CreateMessageParams Params { get; init; } = Params;
     }
 
-    // messages: SamplingMessage[];
-    // /**
-    //  * The server's preferences for which model to select. The client MAY ignore these preferences.
-    //  */
-    // modelPreferences?: ModelPreferences;
-    // /**
-    //  * An optional system prompt the server wants to use for sampling. The client MAY modify or omit this prompt.
-    //  */
-    // systemPrompt?: string;
-    // /**
-    //  * A request to include context from one or more MCP servers (including the caller), to be attached to the prompt. The client MAY ignore this request.
-    //  */
-    // includeContext?: "none" | "thisServer" | "allServers";
-    // /**
-    //  * @TJS-type number
-    //  */
-    // temperature?: number;
-    // /**
-    //  * The maximum number of tokens to sample, as requested by the server. The client MAY choose to sample fewer tokens than requested.
-    //  */
-    // maxTokens: number;
-    // stopSequences?: string[];
-    // /**
-    //  * Optional metadata to pass through to the LLM provider. The format of this metadata is provider-specific.
-    //  */
-    // metadata?: object;
-    public record CreateMessageParams
+    public record CreateMessageParams : IParams
     {
-        public List<SamplingMessage> Messages { get; init; } = new();
+        public List<SamplingMessage> Messages { get; init; } = [];
         public ModelPreferences? ModelPreferences { get; init; }
         public string? SystemPrompt { get; init; }
         public IncludeContext? IncludeContext { get; init; }

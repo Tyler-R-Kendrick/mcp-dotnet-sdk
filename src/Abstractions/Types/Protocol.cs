@@ -15,7 +15,7 @@ public record Root
 {
     [Required]
     [Description("The URI identifying the root. This *must* start with file:// for now.")]
-    public string Uri { get; init; } = string.Empty;
+    public required Uri Uri { get; init; }
 
     [Description("An optional name for the root.")]
     public string? Name { get; init; }
