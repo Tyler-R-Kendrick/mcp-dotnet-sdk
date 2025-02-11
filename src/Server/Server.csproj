@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="System.Reactive" />
     <ProjectReference Include="..\Abstractions\*.csproj" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>

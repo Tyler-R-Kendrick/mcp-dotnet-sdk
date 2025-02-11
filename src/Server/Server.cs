@@ -3,76 +3,32 @@ using StreamJsonRpc;
 
 namespace Server;
 
-public interface IServer
-{
-    ClientCapabilities GetClientCapabilities();
-
-    Implementation GetClientVersion();
-
-#pragma warning disable VSTHRD200 // Use "Async" suffix for async methods
-    Task Ping(CancellationToken token = default);
-
-    Task<CreateMessageResult> CreateMessage(
-        CreateMessageParams @params,
-        CancellationToken token = default);
-
-    Task<ListRootsResult> ListRoots(
-        ListRootsRequest.Parameters? @params = null,
-        CancellationToken token = default);
-
-    Task SendLoggingMessage(
-        LoggingMessageNotification.Parameters @params,
-        CancellationToken token = default);
-
-    Task SendResourceUpdated(
-        ResourceUpdatedNotification.Parameters @params,
-        CancellationToken token = default);
-
-    Task SendResourceListChanged(
-        ResourceListChangedNotification.Parameters @params,
-        CancellationToken token = default);
-
-    Task SendToolListChanged(
-        ToolListChangedNotification.Parameters @params,
-        CancellationToken token = default);
-
-    Task SendPromptListChanged(
-        PromptListChangedNotification.Parameters @params,
-        CancellationToken token = default);
-#pragma warning restore VSTHRD200 // Use "Async" suffix for async methods
-}
-public static class NotificationExtensions
-{
-    public static Task NotifyAsync<TParams>(
-        this INotification<TParams> notification,
-        ITransport transport, CancellationToken token) => notification == null
-            ? throw new ArgumentNullException(nameof(notification))
-            : transport.SendAsync<INotification<TParams>>(
-                notification, token);
-}
-
-public class Server(
-    ITransport transport,
+internal class Server(
+    JsonRpc transport,
     Implementation implementation,
     ClientCapabilities clientCapabilities,
     ListRootsResult listRootsResult)
-    : IServer
+    : IProtocol, IDisposable
 {
-    public Task<CreateMessageResult> CreateMessage(
-        CreateMessageParams @params,
+    public Task<CreateMessageResult> CreateMessageAsync(
+        CreateMessageRequest.Parameters @params,
         CancellationToken token = default)
     {
         var cancellationToken = token;
         CreateMessageRequest request = new(@params);
-        CreateMessageResult result = new() { };
+        CreateMessageResult result = new()
+        {
+        };
         return Task.FromResult(result);
     }
 
-    public ClientCapabilities GetClientCapabilities() => clientCapabilities;
+    public Task<ClientCapabilities> GetClientCapabilitiesAsync(
+        CancellationToken token = default) => Task.FromResult(clientCapabilities);
 
-    public Implementation GetClientVersion() => implementation;
+    public Task<Implementation> GetClientVersionAsync(
+        CancellationToken token = default) => Task.FromResult(implementation);
 
-    public Task<ListRootsResult> ListRoots(
+    public Task<ListRootsResult> ListRootsAsync(
         ListRootsRequest.Parameters? @params = null,
         CancellationToken token = default)
     {
@@ -81,35 +37,48 @@ public class Server(
         return Task.FromResult(listRoots);
     }
 
-    public Task Ping(CancellationToken token = default) => Task.CompletedTask;
+    [JsonRpcMethod("ping")]
+    public Task<EmptyResult> PingAsync(CancellationToken token = default)
+        => Task.FromResult(new EmptyResult());
 
     private Task NotifyAsync<TParams>(
         INotification<TParams> notification,
         CancellationToken token = default)
         => notification.NotifyAsync(transport, token);
 
-    public Task SendLoggingMessage(
+    public Task SendLoggingMessageAsync(
         LoggingMessageNotification.Parameters @params,
         CancellationToken token = default)
         => NotifyAsync(new LoggingMessageNotification(@params), token);
 
-    public Task SendPromptListChanged(
+    public Task SendPromptListChangedAsync(
         PromptListChangedNotification.Parameters @params,
         CancellationToken token = default)
         => NotifyAsync(new PromptListChangedNotification(@params), token);
 
-    public Task SendResourceListChanged(
+    public Task SendResourceListChangedAsync(
         ResourceListChangedNotification.Parameters @params,
         CancellationToken token = default)
         => NotifyAsync(new ResourceListChangedNotification(@params), token);
 
-    public Task SendResourceUpdated(
+    public Task SendResourceUpdatedAsync(
         ResourceUpdatedNotification.Parameters @params,
         CancellationToken token = default)
         => NotifyAsync(new ResourceUpdatedNotification(@params), token);
 
-    public Task SendToolListChanged(
+    public Task SendToolListChangedAsync(
         ToolListChangedNotification.Parameters @params,
         CancellationToken token = default) 
         => NotifyAsync(new ToolListChangedNotification(@params), token);
+
+    private ServerCapabilities _capabilities = new();
+    public Task RegisterCapabilitesAsync(
+        ServerCapabilities capabilities,
+        CancellationToken cancellationToken = default)
+    {
+        _capabilities = capabilities;
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() => transport.Dispose();
 }

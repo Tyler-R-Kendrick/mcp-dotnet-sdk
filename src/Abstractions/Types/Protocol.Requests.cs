@@ -249,27 +249,27 @@ public record SubscribeRequest(
         public override string Type { get; init; } = "ref/resource";
     }
 
-    public record CreateMessageRequest(CreateMessageParams Params)
-        : IRequest<CreateMessageParams>
+    public record CreateMessageRequest(CreateMessageRequest.Parameters Params)
+        : IRequest<CreateMessageRequest.Parameters>
     {
         [Required]
         [Description("The method for creating a message.")]
         public string Method { get; private init; } = "messages/create";
 
         [Required]
-        public CreateMessageParams Params { get; init; } = Params;
-    }
+        public Parameters Params { get; init; } = Params;
 
-    public record CreateMessageParams : IParams
-    {
-        public List<SamplingMessage> Messages { get; init; } = [];
-        public ModelPreferences? ModelPreferences { get; init; }
-        public string? SystemPrompt { get; init; }
-        public IncludeContext? IncludeContext { get; init; }
-        public double? Temperature { get; init; }
-        public int MaxTokens { get; init; }
-        public List<string>? StopSequences { get; init; }
-        public Dictionary<string, object>? Metadata { get; init; }
+        public record Parameters : IParams
+        {
+            public List<SamplingMessage> Messages { get; init; } = [];
+            public ModelPreferences? ModelPreferences { get; init; }
+            public string? SystemPrompt { get; init; }
+            public IncludeContext? IncludeContext { get; init; }
+            public double? Temperature { get; init; }
+            public int MaxTokens { get; init; }
+            public List<string>? StopSequences { get; init; }
+            public Dictionary<string, object>? Metadata { get; init; }
+        }
     }
 
 

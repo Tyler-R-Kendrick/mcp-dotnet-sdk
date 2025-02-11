@@ -44,14 +44,9 @@
 
 namespace Abstractions.Models;
 
-public interface ITransport
+public interface ITransport : IObservable<IMessage>
 {
-    Task StartAsync(CancellationToken cancellationToken);
     Task<TResult> SendAsync<TResult>(
         IMessage message,
         CancellationToken cancellationToken);
-    Task CloseAsync(CancellationToken cancellationToken);
-    event Action OnClose;
-    event Action<Exception> OnError;
-    event Action<IMessage> OnMessage;
 }
