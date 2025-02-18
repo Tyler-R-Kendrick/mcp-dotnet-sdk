@@ -192,9 +192,10 @@ namespace Abstractions.Models;
         LoggingMessageNotification.Parameters Params)
         : INotification<LoggingMessageNotification.Parameters>, IServerNotificaiton
     {
+        public const string MethodName = "notifications/message";
         [Required]
         [Description("The method indicating a logging message notification.")]
-        public string Method { get; private init; } = "notifications/message";
+        public string Method { get; private init; } = MethodName;
 
         [Required]
         public Parameters Params { get; init; } = Params;

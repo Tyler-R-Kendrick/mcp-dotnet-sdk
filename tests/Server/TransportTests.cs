@@ -1,7 +1,5 @@
 using Microsoft.VisualStudio.Threading;
 using StreamJsonRpc;
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using Server;
 using Abstractions.Models;
 using Nerdbank.Streams;
@@ -10,10 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Generators.Tests;
 
 [TestClass]
-public class MinimalTests
+public class TransportTests
 {
     [TestMethod]
-    public async Task JsonRpcInvokesServerMethod()
+    public async Task ClientInvokesServerPingMethod()
     {
         //Arrange
         (var clientStream, var serverStream) = FullDuplexStream.CreatePair();

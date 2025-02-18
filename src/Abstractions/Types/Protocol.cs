@@ -40,7 +40,7 @@ public record Implementation
         [Description("Capabilities related to listing roots.")]
         public RootsCapabilities? Roots { get; init; }
 
-        [Description("Capabilities related to sampling.")]
+        [Description("Present if the client supports sampling from an LLM.")]
         public Dictionary<string, object>? Sampling { get; init; }
     }
 
@@ -91,10 +91,10 @@ public record Implementation
         public string Type { get; init; } = "object";
 
         [Description("The properties of the schema.")]
-        public Dictionary<string, object>? Properties { get; init; }
+        public Dictionary<string, object>? Properties { get; init; } = [];
 
         [Description("The required properties of the schema.")]
-        public string[]? Required { get; init; }
+        public string[]? Required { get; init; } = [];
     }
 
 public record Prompt

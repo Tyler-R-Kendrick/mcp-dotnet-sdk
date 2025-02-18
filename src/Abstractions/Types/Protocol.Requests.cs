@@ -5,10 +5,10 @@ namespace Abstractions.Models;
 
 public interface IMessage
 {
-    
     [Required]
     [Description("The method indicating the type of message.")]
     string Method { get; }
+    public static string MethodName { get; }
 }
 public interface IParams
 {
@@ -71,8 +71,9 @@ public interface IMessage<TParams> : IMessage
     // ListRootsRequest
     public record ListRootsRequest(
         ListRootsRequest.Parameters Params)
-        : BaseRequest<ListRootsRequest.Parameters>("roots/list", Params), IClientRequest
+        : BaseRequest<ListRootsRequest.Parameters>(ListRootsRequest.MethodName, Params), IClientRequest
     {
+        public const string MethodName = "roots/list";
         public record Parameters : IParams
         {
             [Description("Optional metadata for the list roots request.")]
@@ -102,8 +103,9 @@ public record ListResourcesRequest()
     // CallToolRequest
 public record CallToolRequest(
     CallToolRequest.Parameters Params)
-    : BaseRequest<CallToolRequest.Parameters>("tools/call", Params), IClientRequest
+    : BaseRequest<CallToolRequest.Parameters>(MethodName, Params), IClientRequest
 {
+    public const string MethodName = "tools/call";
     public record Parameters
     {
         [Required]
@@ -252,9 +254,11 @@ public record SubscribeRequest(
     public record CreateMessageRequest(CreateMessageRequest.Parameters Params)
         : IRequest<CreateMessageRequest.Parameters>
     {
+        public const string MethodName = "messages/create";
+
         [Required]
         [Description("The method for creating a message.")]
-        public string Method { get; private init; } = "messages/create";
+        public string Method { get; private init; } = MethodName;
 
         [Required]
         public Parameters Params { get; init; } = Params;

@@ -92,7 +92,7 @@ public record CallToolResult : EmptyResult
 {
     [Required]
     [Description("The content returned by the tool.")]
-    public List<IContent> Content { get; init; } = [];
+    public IContent[] Content { get; init; } = [];
 
     [Description("Indicates whether the tool call resulted in an error.")]
     public bool IsError { get; init; } = false;
