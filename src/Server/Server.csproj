@@ -9,4 +9,8 @@
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="$(MSBuildProjectName).Tests" />
+  </ItemGroup>
+
 </Project>

@@ -66,6 +66,7 @@ public interface IMessage<TParams> : IMessage
     // PingRequest
     public record PingRequest() : BaseRequest("ping"), IClientRequest
     {
+        public record Parameters;
     }
 
     // ListRootsRequest
@@ -99,6 +100,13 @@ public record ListResourcesRequest()
 {
 }
 
+public record ListToolsRequest(
+    ListToolsRequest.Parameters Params)
+    : PaginatedRequest(MethodName)
+{
+    public const string MethodName = "tools/list";
+    public record Parameters;
+}
 
     // CallToolRequest
 public record CallToolRequest(

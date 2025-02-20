@@ -1,6 +1,4 @@
 
-using Abstractions.Models;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using StreamJsonRpc;
 
@@ -18,52 +16,44 @@ public static class DependencyInjectionExtensions
             new HeaderDelimitedMessageHandler(
                 Console.OpenStandardInput(),
                 Console.OpenStandardOutput())));
-    public static IServiceCollection Configure(
-        this IServiceCollection services,
-        Action<ServerOptions> configure)
-        => services.Configure(configure);
-    public static IServiceCollection Configure(
-        this IServiceCollection services,
-        Action<Implementation> configure)
-        => services.Configure(configure);
-    public static IServiceCollection Configure(
-        this IServiceCollection services,
-        Action<ClientCapabilities> configure)
-        => services.Configure(configure);
-    public static IServiceCollection Configure(
-        this IServiceCollection services,
-        Action<ListRootsResult> configure)
-        => services.Configure(configure);
     public static IServiceCollection AddMcpServer(
         this IServiceCollection services,
         Func<IServiceProvider, JsonRpc>? jsonRpcFactory = null,
-        string defaultModel = "gpt-4o",
-        Dictionary<string, AIFunction>? tools = null)
+        OnCallToolAsync? callToolHandler = null,
+        OnListToolsAsync? listToolsHandler = null,
+        OnListPromptsAsync? listPromptsHandler = null,
+        OnGetPromptAsync? getPromptHandler = null,
+        OnReadResourceAsync? readResourceHandler = null,
+        OnListResourcesAsync? listResourcesHandler = null,
+        OnCreateMessageAsync? createMessageHandler = null,
+        OnCompleteAsync? completeHandler = null)
     {
-        jsonRpcFactory ??= provider => provider.GetRequiredService<JsonRpc>();
         return services
-            .AddTransient(jsonRpcFactory)
-            .AddSingleton<IProtocol>(provider =>
+            .AddTransient<Func<JsonRpc>>(provider =>
+                () => jsonRpcFactory?.Invoke(provider)
+                    ?? provider.GetRequiredService<JsonRpc>())
+            .AddTransient<JsonRpc>(provider =>
+                provider.GetRequiredService<Func<JsonRpc>>()())
+            .AddTransient<DelegatedServerFactory>()
+            .AddTransient(provider =>
             {
-                var chatClient = provider.GetRequiredService<IChatClient>();
                 var rpcServer = provider.GetRequiredService<JsonRpc>();
-                T Get<T>() where T : new() => provider.GetService<T>() ?? new();
-                var implementation = Get<Implementation>();
-                var clientCapabilities = Get<ClientCapabilities>();
-                var listRootsResult = Get<ListRootsResult>();
-                Server server = new(
-                    chatClient: chatClient,
-                    transport: rpcServer,
-                    implementation: implementation,
-                    clientCapabilities: clientCapabilities,
-                    listRootsResult: listRootsResult,
-                    defaultModel: defaultModel,
-                    tools: tools ?? [],
-                    pipeline: provider.GetRequiredService<Polly.ResiliencePipeline>(),
-                    converter: provider.GetRequiredService<System.ComponentModel.TypeConverter>());
+                var server = provider.GetRequiredService<DelegatedServerFactory>()
+                    .Create(
+                        callToolHandler: callToolHandler,
+                        listToolsHandler: listToolsHandler,
+                        getPromptHandler: getPromptHandler,
+                        listPromptsHandler: listPromptsHandler,
+                        createMessageHandler: createMessageHandler,
+                        completeHandler: completeHandler,
+                        readResourceHandler: readResourceHandler,
+                        listResourcesHandler: listResourcesHandler
+                    );
                 rpcServer.AddLocalRpcTarget(server);
                 rpcServer.StartListening();
                 return server;
-            });
+            })
+            .AddTransient<IProtocol>(provider => provider.GetRequiredService<DelegatingServer>())
+            .AddTransient<IServer>(provider => provider.GetRequiredService<DelegatingServer>());
     }
 }

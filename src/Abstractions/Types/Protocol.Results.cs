@@ -146,13 +146,9 @@ public record ServerResources : ServerList
     public bool? Subscribe { get; init; }
 }
 
-public record ServerPrompts : ServerList
-{
-}
+public record ServerPrompts : ServerList;
 
-public record ServerTools : ServerList
-{
-}
+public record ServerTools : ServerList;
 
 // ListResourcesResult
 public record ListResourcesResult : EmptyResult, IServerResult
@@ -177,6 +173,8 @@ public record Resource
     [Description("The MIME type of the resource.")]
     public string? MimeType { get; init; } = string.Empty;
 }
+
+public record ListToolsResult : EmptyResult, IServerResult;
 
 // /**
 //  * The server's response to a resources/read request from the client.
@@ -235,3 +233,5 @@ public record PaginatedResult : EmptyResult
     [Description("The next cursor for pagination, if more results are available.")]
     public string? NextCursor { get; init; }
 }
+
+public record CompleteResult : EmptyResult;

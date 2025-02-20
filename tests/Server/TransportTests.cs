@@ -1,16 +1,15 @@
 using Microsoft.VisualStudio.Threading;
 using StreamJsonRpc;
-using Server;
 using Abstractions.Models;
 using Nerdbank.Streams;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Generators.Tests;
+namespace Server.Tests;
 
 [TestClass]
 public class TransportTests
 {
-    [TestMethod]
+    [TestMethod, Timeout(2000)]
     public async Task ClientInvokesServerPingMethod()
     {
         //Arrange
@@ -18,12 +17,13 @@ public class TransportTests
         var services = new ServiceCollection()
             .AddMcpServer(_ => new(serverStream))
             .BuildServiceProvider();
-        var server = services.GetRequiredService<IProtocol>();
-        var client = JsonRpc.Attach<IProtocol>(clientStream);
+        var server = services.GetRequiredService<IServer>();
+        var client = JsonRpc.Attach<IServer>(clientStream);
+        PingRequest request = new();
 
         //Act
         var response = await client
-            .PingAsync(CancellationToken.None)
+            .PingAsync(request, CancellationToken.None)
             .WithTimeout(TimeSpan.FromSeconds(1));
 
         //Assert

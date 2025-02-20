@@ -1,5 +1,4 @@
 using Abstractions.Models;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Server.Tests;
@@ -7,30 +6,38 @@ namespace Server.Tests;
 [TestClass]
 public class ToolCallTests
 {
+    private static IServer Allocate(
+        OnCallToolAsync? callToolHandler = null)
+    {
+        var services = Configure(callToolHandler: callToolHandler);
+        services.AddJsonRpcStream(new MemoryStream());
+        var serviceProvider = services.BuildServiceProvider();
+        return serviceProvider.GetRequiredService<IServer>();
+    }
+
     private static IServiceCollection Configure(
-        Dictionary<string, AIFunction>? tools = null
-    )
+        OnCallToolAsync? callToolHandler = null)
     {
         ServiceCollection services = new();
-        services.AddMcpServer(tools: tools);
+        services.AddMcpServer(
+            callToolHandler: callToolHandler);
         return services;
     }
 
-    [TestMethod]
+    [TestMethod, Timeout(2000)]
     public async Task CallToolAsync_ReturnsExpectedResult()
     {
         // Arrange
-        var tool = AIFunctionFactory.Create(() => "value", new() { });
-        var tools = new Dictionary<string, AIFunction>
+        int toolCallCount = 0;
+        var server = Allocate(callToolHandler: (request, token) =>
         {
-            { "TestTool", tool }
-        };
-        var services = Configure(tools);
-        var serviceProvider = services.BuildServiceProvider();
-        var server = serviceProvider.GetRequiredService<Server>();
+            toolCallCount++;
+            return Task.FromResult(new CallToolResult());
+        });
         CallToolRequest request = new(new()
         {
-            Name = tool.Metadata.Name
+            Name = "TestTool",
+            Arguments = new() { { "arg1", "value1" } }
         });
 
         // Act
@@ -40,15 +47,17 @@ public class ToolCallTests
         Assert.IsNotNull(result);
         Assert.IsFalse(result.IsError);
         Assert.IsInstanceOfType<IContent[]>(result.Content);
+        Assert.AreEqual(1, toolCallCount);
     }
 
-    [TestMethod]
+    [TestMethod, Timeout(2000)]
     public async Task CallToolAsync_ReturnsErrorOnException()
     {
-        // Arrange
-        var services = Configure();
-        var serviceProvider = services.BuildServiceProvider();
-        var server = serviceProvider.GetRequiredService<Server>();
+        var server = Allocate(callToolHandler: (request, token) =>
+        {
+            CallToolResult result = new() { IsError = true };
+            return Task.FromResult(result);
+        });
         CallToolRequest request = new(new()
         {
             Name = "NonExistentTool",
