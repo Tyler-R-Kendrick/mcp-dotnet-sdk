@@ -59,7 +59,7 @@ public interface IMessage<TParams> : IMessage
 
             [Required]
             [Description("The protocol version supported by the client.")]
-            public string ProtocolVersion { get; init; } = "1.0";
+            public string ProtocolVersion { get; init; } = "0.0.1";
         }
     }
 

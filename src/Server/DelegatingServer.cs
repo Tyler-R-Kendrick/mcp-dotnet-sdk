@@ -39,6 +39,11 @@ internal partial class DelegatingServer(
     JsonRpc transport)
     : IProtocol, IDisposable
 {
+    public Task<IServer> ConnectAsync(CancellationToken token = default)
+    {
+
+        return Task.FromResult<IServer>(this);
+    }
     public void Dispose() => transport.Dispose();
 }
 
@@ -126,13 +131,13 @@ internal partial class DelegatingServer
     }
 }
 
-public delegate Task<EmptyResult> OnPingAsync(
+public delegate Task<PingResult> OnPingAsync(
     Abstractions.Models.PingRequest request,
     CancellationToken token);
 internal partial class DelegatingServer
 {
-    public OnPingAsync? PingHandler = delegate { return Task.FromResult(new EmptyResult()); };
-    public Task<EmptyResult> PingAsync(
+    public OnPingAsync? PingHandler = delegate { return Task.FromResult(new PingResult()); };
+    public Task<PingResult> PingAsync(
         Abstractions.Models.PingRequest request,
         CancellationToken token = default)
     {
@@ -153,6 +158,21 @@ internal partial class DelegatingServer
     {
         return ListRootsHandler?.Invoke(request, token)
             ?? throw new InvalidOperationException("List roots handler is not set.");
+    }
+}
+
+delegate Task<InitializeResult> OnInitializeAsync(
+    Abstractions.Models.InitializeRequest request,
+    CancellationToken token = default);
+internal partial class DelegatingServer
+{
+    public OnInitializeAsync? InitializeHandler;
+    public Task<InitializeResult> InitializeAsync(
+        Abstractions.Models.InitializeRequest request,
+        CancellationToken token = default)
+    {
+        return InitializeHandler?.Invoke(request, token)
+            ?? throw new InvalidOperationException("Initialize handler is not set.");
     }
 }
 

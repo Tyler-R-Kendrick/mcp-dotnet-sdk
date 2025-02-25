@@ -9,6 +9,7 @@
     <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
     <ProjectReference Include="..\Generators\*.csproj" PrivateAssets="all" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 
   <ItemGroup>

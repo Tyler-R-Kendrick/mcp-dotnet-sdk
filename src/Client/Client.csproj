@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Abstractions\*.csproj" />
-    <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 
 </Project>

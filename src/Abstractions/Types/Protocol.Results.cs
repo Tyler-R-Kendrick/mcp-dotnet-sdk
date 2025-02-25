@@ -98,6 +98,8 @@ public record CallToolResult : EmptyResult
     public bool IsError { get; init; } = false;
 }
 
+public record PingResult : EmptyResult;
+
 // InitializeResult
 public record InitializeResult : EmptyResult, IServerResult
 {
