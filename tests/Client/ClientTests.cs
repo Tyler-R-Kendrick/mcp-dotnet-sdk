@@ -1,34 +1,37 @@
 using StreamJsonRpc;
 using Nerdbank.Streams;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Tests;
 using Abstractions.Models;
 
 [TestClass]
-public partial class ClientTests : McpTestClassFixture<ClientFactory>
+public partial class ClientConnectionTests : McpTestClassFixture<IClientFactory>
 {
     [TestMethod, Timeout(2000)]
-    public async Task ConnectAsync_ShouldCreateClientConnection()
+    public async Task ConnectAsync_ShouldCreateMessage()
     {
         (var clientStream, var serverStream) = FullDuplexStream.CreatePair();
-        using ServerNegotiation serverNegotiation = new(serverStream);
+        using FakeServerNegotiation serverNegotiation = new(serverStream);
         // Arrange
-        Setup(provider => 
-        {
-            JsonRpc rpc = new(clientStream, serverStream);
-            rpc.AddLocalRpcTarget(serverNegotiation);
-            rpc.StartListening();
-            return rpc;
-        });
-        Setup(_ => new ClientCapabilities());
-        Setup(services => services.AddSingleton<ClientFactory>());
+        Setup(services => services.AddMcpClient(
+            jsonRpcFactory: (provider, _) => 
+            {
+                JsonRpc rpc = new(clientStream, serverStream);
+                rpc.AddLocalRpcTarget(serverNegotiation);
+                rpc.StartListening();
+                return rpc;
+            },
+            clientCapabilitiesFactory: (_, _) => new() { Sampling = [] },
+            onCreateMessageAsync: (_, _) => Task.FromResult(new CreateMessageResult())
+        ));
+        CreateMessageRequest request = new(new());
 
         // Act
-        using var clientConnection = await Concern.ConnectAsync(CancellationToken.None);
+        using IClientConnection connection = await Concern.ConnectAsync();
+        var response = await connection.CreateMessageAsync(request, CancellationToken.None);
 
         // Assert
-        Assert.IsNotNull(clientConnection);
+        Assert.IsNotNull(response);
         Assert.AreEqual(1, serverNegotiation.CallCount);
     }
 }

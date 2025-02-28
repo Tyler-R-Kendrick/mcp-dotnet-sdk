@@ -7,17 +7,20 @@ public partial class McpTestClassFixture<TConcern>
     : TestClassFixture<TConcern>
     where TConcern : class
 {
-    protected virtual void SetupJsonRpc(Func<Stream, Stream, object> rpcTargetFactory)
+    protected virtual void SetupJsonRpc(JsonRpc rpc, object rpcTarget)
     {
-        (var clientStream, var serverStream) = FullDuplexStream.CreatePair();
-        // Arrange
         Setup(provider => 
         {
-            JsonRpc rpc = new(clientStream, serverStream);
-            var rpcTarget = rpcTargetFactory(clientStream, serverStream);
             rpc.AddLocalRpcTarget(rpcTarget);
             rpc.StartListening();
             return rpc;
         });
+    }
+    protected virtual void SetupJsonRpc(Func<Stream, Stream, object> rpcTargetFactory)
+    {
+        (var clientStream, var serverStream) = FullDuplexStream.CreatePair();
+        JsonRpc rpc = new(clientStream, serverStream);
+        var rpcTarget = rpcTargetFactory(clientStream, serverStream);
+        SetupJsonRpc(rpc, rpcTarget);
     }
 }

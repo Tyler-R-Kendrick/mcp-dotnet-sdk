@@ -10,6 +10,7 @@ public interface IMcpNegotiation : IDisposable
         InitializeRequest request,
         CancellationToken token = default);
 
+    [JsonRpcMethod("initialized")]
     Task NotifyAsync(
         InitializedNotification notification,
         CancellationToken token = default);

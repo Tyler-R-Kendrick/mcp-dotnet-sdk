@@ -2,7 +2,9 @@
 namespace Client;
 
 using Abstractions.Models;
-
+public delegate Task<CreateMessageResult> OnCreateMessageAsync(
+    CreateMessageRequest request,
+    CancellationToken token);
 public partial class ClientConnection(
     IServerConnection connection,
     ServerCapabilities serverCapabilities,
@@ -50,12 +52,12 @@ public partial class ClientConnection(
             : await connection.ListPromptsAsync(request, token);
     }
 
-    public Func<CreateMessageRequest, CancellationToken, Task<CreateMessageResult>> OnCreateMessageAsync { get; set; } = default!;
+    public OnCreateMessageAsync? OnCreateMessageAsync { get; set; } = default!;
     public async Task<CreateMessageResult> CreateMessageAsync(
         CreateMessageRequest request,
         CancellationToken token = default)
     {
-        return clientCapabilities.Sampling == null
+        return clientCapabilities.Sampling == null || OnCreateMessageAsync == null
             ? throw new InvalidOperationException("Client does not support sampling.")
             : await OnCreateMessageAsync(request, token);
     }

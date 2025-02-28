@@ -36,8 +36,14 @@ public partial class TestClassFixture<TConcern>
         else
             services.AddKeyedSingleton(name, factory);
     }
+
+    private static readonly Type _concernType = typeof(TConcern);
     protected virtual void SetupDependencies(IServiceCollection services)
-        => services.AddSingleton<TConcern>();
+    {
+        var canNotRegister = _concernType.IsAbstract || _concernType.IsInterface;
+        if (!canNotRegister)
+            services.AddSingleton<TConcern>();
+    }
     
     protected virtual TConcern Allocate(IServiceProvider provider)
         => provider.GetRequiredService<TConcern>();

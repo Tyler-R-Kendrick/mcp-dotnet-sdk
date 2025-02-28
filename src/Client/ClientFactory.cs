@@ -3,7 +3,20 @@ using StreamJsonRpc;
 namespace Client;
 using Abstractions.Models;
 
-public class ClientFactory(JsonRpc transport, ClientCapabilities capabilities)
+public interface IClientFactory
+{
+    Task<PingResult> PingAsync(
+        PingRequest request,
+        CancellationToken token = default);
+
+    Task<IClientConnection> ConnectAsync(
+        CancellationToken token = default);
+}
+internal class ClientFactory(
+    JsonRpc transport,
+    ClientCapabilities capabilities,
+    OnCreateMessageAsync? onCreateMessageAsync = null)
+    : IClientFactory
 {
     public async Task<PingResult> PingAsync(
         PingRequest request,
@@ -33,10 +46,12 @@ public class ClientFactory(JsonRpc transport, ClientCapabilities capabilities)
             token);
 
         IServerConnection serverConnection = transport.Attach<IServerConnection>();
-        ClientConnection connection = new(
+        return new ClientConnection(
             connection: serverConnection,
             serverCapabilities: result.Capabilities,
-            clientCapabilities: capabilities);
-        return connection;
+            clientCapabilities: capabilities)
+        {
+            OnCreateMessageAsync = onCreateMessageAsync
+        };
     }
 }

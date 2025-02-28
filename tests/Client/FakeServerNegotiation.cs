@@ -4,7 +4,7 @@ namespace Client.Tests;
 using Abstractions;
 using Abstractions.Models;
 
-public partial class ServerNegotiation(Stream stream)
+public partial class FakeServerNegotiation(Stream stream)
     : IMcpNegotiation
 {
     public int CallCount = 0;
