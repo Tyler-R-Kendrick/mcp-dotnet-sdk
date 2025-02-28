@@ -12,6 +12,7 @@ public static class DependencyInjectionExtensions
         Func<IServiceProvider, object?, JsonRpc> jsonRpcFactory,
         Func<IServiceProvider, object?, ClientCapabilities>? clientCapabilitiesFactory = null,
         OnCreateMessageAsync? onCreateMessageAsync = null,
+        OnListRootsAsync? onListRootsAsync = null,
         string? key = null)
         {
             clientCapabilitiesFactory ??= (provider, _) => new() { Sampling = onCreateMessageAsync is null ? null : [] };
@@ -22,7 +23,8 @@ public static class DependencyInjectionExtensions
                     (provider, k) => new(
                         transport: provider.GetRequiredKeyedService<JsonRpc>(k), 
                         capabilities: provider.GetRequiredKeyedService<ClientCapabilities>(k),
-                        onCreateMessageAsync: onCreateMessageAsync))
+                        onCreateMessageAsync: onCreateMessageAsync,
+                        onListRootsAsync: onListRootsAsync))
                 .AddKeyedSingleton(key, (provider, t) => 
                 {
                     var clientFactory = provider.GetRequiredKeyedService<IClientFactory>(key);

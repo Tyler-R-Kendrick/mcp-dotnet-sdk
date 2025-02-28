@@ -5,6 +5,9 @@ using Abstractions.Models;
 public delegate Task<CreateMessageResult> OnCreateMessageAsync(
     CreateMessageRequest request,
     CancellationToken token);
+public delegate Task<ListRootsResult> OnListRootsAsync(
+    ListRootsRequest request,
+    CancellationToken token);
 public partial class ClientConnection(
     IServerConnection connection,
     ServerCapabilities serverCapabilities,
@@ -86,12 +89,12 @@ public partial class ClientConnection(
             : await connection.ListResourcesAsync(request, token);
     }
 
-    public Func<ListRootsRequest, CancellationToken, Task<ListRootsResult>> OnListRootsAsync { get; set; } = default!;
+    public OnListRootsAsync? OnListRootsAsync { get; set; } = default!;
     public async Task<ListRootsResult> ListRootsAsync(
         ListRootsRequest request,
         CancellationToken token = default)
     {
-        return clientCapabilities.Roots == null
+        return clientCapabilities.Roots == null || OnListRootsAsync == null
             ? throw new InvalidOperationException("Client does not support roots.")
             : await OnListRootsAsync(request, token);
     }

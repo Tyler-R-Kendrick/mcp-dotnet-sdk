@@ -15,7 +15,8 @@ public interface IClientFactory
 internal class ClientFactory(
     JsonRpc transport,
     ClientCapabilities capabilities,
-    OnCreateMessageAsync? onCreateMessageAsync = null)
+    OnCreateMessageAsync? onCreateMessageAsync = null,
+    OnListRootsAsync? onListRootsAsync = null)
     : IClientFactory
 {
     public async Task<PingResult> PingAsync(
@@ -51,7 +52,8 @@ internal class ClientFactory(
             serverCapabilities: result.Capabilities,
             clientCapabilities: capabilities)
         {
-            OnCreateMessageAsync = onCreateMessageAsync
+            OnCreateMessageAsync = onCreateMessageAsync,
+            OnListRootsAsync = onListRootsAsync,
         };
     }
 }
