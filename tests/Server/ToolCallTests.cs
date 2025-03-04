@@ -1,18 +1,20 @@
-using Abstractions.Models;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Server.Tests;
+using Models;
+using Abstractions.Models;
+using Abstractions.Sessions;
 
 [TestClass]
 public class ToolCallTests
 {
-    private static IServer Allocate(
+    private static IServerSession Allocate(
         OnCallToolAsync? callToolHandler = null)
     {
         var services = Configure(callToolHandler: callToolHandler);
         services.AddJsonRpcStream(new MemoryStream());
         var serviceProvider = services.BuildServiceProvider();
-        return serviceProvider.GetRequiredService<IServer>();
+        return serviceProvider.GetRequiredService<IServerSession>();
     }
 
     private static IServiceCollection Configure(

@@ -1,10 +1,12 @@
 using Microsoft.VisualStudio.Threading;
 using StreamJsonRpc;
-using Abstractions.Models;
 using Nerdbank.Streams;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Server.Tests;
+using Abstractions;
+using Abstractions.Models;
+using Abstractions.Sessions;
 
 [TestClass]
 public class TransportTests
@@ -17,8 +19,8 @@ public class TransportTests
         var services = new ServiceCollection()
             .AddMcpServer(_ => new(serverStream))
             .BuildServiceProvider();
-        var server = services.GetRequiredService<IServer>();
-        var client = JsonRpc.Attach<IServer>(clientStream);
+        var server = services.GetRequiredService<IServerSession>();
+        var client = JsonRpc.Attach<IServerSession>(clientStream);
         PingRequest request = new();
 
         //Act

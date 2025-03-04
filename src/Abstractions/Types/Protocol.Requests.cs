@@ -20,67 +20,67 @@ public interface IMessage<TParams> : IMessage
     TParams Params { get; init; }
 }
 
-    // Base Request Type
-    public interface IRequest : IMessage
-    {
-    }
-    public interface IRequest<TParams> : IMessage<TParams>
-    {
-    }
+// Base Request Type
+public interface IRequest : IMessage
+{
+}
+public interface IRequest<TParams> : IMessage<TParams>
+{
+}
 
-    public record BaseRequest(string Method) : IRequest
+public record BaseRequest(string Method) : IRequest
+{
+    [Required]
+    [Description("The method to request.")]
+    public string Method { get; private init; } = Method;
+}
+
+public record BaseRequest<TParams>(
+    string Method,
+    TParams Params)
+    : BaseRequest(Method), IRequest<TParams>
+{
+    [Description("The parameters to supply to the request.")]
+    public TParams Params { get; init; } = Params;
+}
+
+// InitializeRequest
+public record InitializeRequest(
+    InitializeRequest.Parameters Params)
+    : BaseRequest<InitializeRequest.Parameters>("initialize", Params), IClientRequest
+{
+    public record Parameters : IParams
     {
         [Required]
-        [Description("The method to request.")]
-        public string Method { get; private init; } = Method;
-    }
+        public ClientCapabilities Capabilities { get; init; } = new();
 
-    public record BaseRequest<TParams>(
-        string Method,
-        TParams Params)
-        : BaseRequest(Method), IRequest<TParams>
+        [Required]
+        public Implementation ClientInfo { get; init; } = new();
+
+        [Required]
+        [Description("The protocol version supported by the client.")]
+        public string ProtocolVersion { get; init; } = "0.0.1";
+    }
+}
+
+// PingRequest
+public record PingRequest() : BaseRequest("ping"), IClientRequest
+{
+    public record Parameters;
+}
+
+// ListRootsRequest
+public record ListRootsRequest(
+    ListRootsRequest.Parameters Params)
+    : BaseRequest<ListRootsRequest.Parameters>(ListRootsRequest.MethodName, Params), IClientRequest
+{
+    public const string MethodName = "roots/list";
+    public record Parameters : IParams
     {
-        [Description("The parameters to supply to the request.")]
-        public TParams Params { get; init; } = Params;
+        [Description("Optional metadata for the list roots request.")]
+        public Dictionary<string, object>? Meta { get; init; }
     }
-
-    // InitializeRequest
-    public record InitializeRequest(
-        InitializeRequest.Parameters Params)
-        : BaseRequest<InitializeRequest.Parameters>("initialize", Params), IClientRequest
-    {
-        public record Parameters : IParams
-        {
-            [Required]
-            public ClientCapabilities Capabilities { get; init; } = new();
-
-            [Required]
-            public Implementation ClientInfo { get; init; } = new();
-
-            [Required]
-            [Description("The protocol version supported by the client.")]
-            public string ProtocolVersion { get; init; } = "0.0.1";
-        }
-    }
-
-    // PingRequest
-    public record PingRequest() : BaseRequest("ping"), IClientRequest
-    {
-        public record Parameters;
-    }
-
-    // ListRootsRequest
-    public record ListRootsRequest(
-        ListRootsRequest.Parameters Params)
-        : BaseRequest<ListRootsRequest.Parameters>(ListRootsRequest.MethodName, Params), IClientRequest
-    {
-        public const string MethodName = "roots/list";
-        public record Parameters : IParams
-        {
-            [Description("Optional metadata for the list roots request.")]
-            public Dictionary<string, object>? Meta { get; init; }
-        }
-    }
+}
 
 public abstract record PaginatedRequest(string Method) : BaseRequest(Method)
 {
@@ -96,8 +96,9 @@ public abstract record PaginatedRequest(string Method) : BaseRequest(Method)
 //   method: "resources/list";
 // }
 public record ListResourcesRequest()
-    : PaginatedRequest("resources/list"), IClientRequest
+    : PaginatedRequest(MethodName), IClientRequest
 {
+    public const string MethodName = "resources/list";
 }
 
 public record ListToolsRequest(
@@ -141,8 +142,9 @@ public record CallToolRequest(
 // }
 public record ReadResourceRequest(
     ReadResourceRequest.Parameters Params)
-    : BaseRequest<ReadResourceRequest.Parameters>("resources/read", Params), IClientRequest
+    : BaseRequest<ReadResourceRequest.Parameters>(MethodName, Params), IClientRequest
 {
+    public const string MethodName = "resources/read";
     public record Parameters
     {
         [Required]
@@ -176,113 +178,113 @@ public record SubscribeRequest(
     }
 }
 
-    // UnsubscribeRequest
-    public record UnsubscribeRequest : IRequest
+// UnsubscribeRequest
+public record UnsubscribeRequest : IRequest
+{
+    [Required]
+    [Description("The method to unsubscribe from resource updates.")]
+    public string Method { get; init; } = "resources/unsubscribe";
+
+    [Required]
+    public UnsubscribeParams Params { get; init; } = new UnsubscribeParams();
+}
+
+public record UnsubscribeParams
+{
+    [Required]
+    [Description("The URI of the resource to unsubscribe from.")]
+    public Uri Uri { get; init; } = new Uri("http://example.com");
+}
+
+// Base Client Request Interface
+public interface IClientRequest : IRequest
+{
+}
+
+// CompleteRequest
+public record CompleteRequest : IClientRequest
+{
+    [Required]
+    [Description("The method for a completion request.")]
+    public string Method { get; init; } = "completion/complete";
+
+    [Required]
+    public CompleteParams Params { get; init; } = new CompleteParams();
+}
+
+public record CompleteParams
+{
+    [Required]
+    public CompletionArgument Argument { get; init; } = new CompletionArgument();
+
+    [Required]
+    public CompletionReference Ref { get; init; } = new PromptReference();
+}
+
+public record CompletionArgument
+{
+    [Required]
+    [Description("The name of the argument.")]
+    public string Name { get; init; } = string.Empty;
+
+    [Required]
+    [Description("The value of the argument.")]
+    public string Value { get; init; } = string.Empty;
+}
+
+public abstract record CompletionReference
+{
+    [Required]
+    [Description("The type of the reference.")]
+    public abstract string Type { get; init; }
+}
+
+public record PromptReference : CompletionReference
+{
+    [Required]
+    [Description("The name of the prompt or template.")]
+    public string Name { get; init; } = string.Empty;
+
+    [Required]
+    [Description("The type of the reference.")]
+    public override string Type { get; init; } = "ref/prompt";
+}
+
+public record ResourceReference : CompletionReference
+{
+    [Required]
+    [Description("The URI or URI template of the resource.")]
+    public string Uri { get; init; } = string.Empty;
+
+    [Required]
+    [Description("The type of the reference.")]
+    public override string Type { get; init; } = "ref/resource";
+}
+
+public record CreateMessageRequest(CreateMessageRequest.Parameters Params)
+    : IRequest<CreateMessageRequest.Parameters>
+{
+    public const string MethodName = "messages/create";
+
+    [Required]
+    [Description("The method for creating a message.")]
+    public string Method { get; private init; } = MethodName;
+
+    [Required]
+    public Parameters Params { get; init; } = Params;
+
+    public record Parameters : IParams
     {
-        [Required]
-        [Description("The method to unsubscribe from resource updates.")]
-        public string Method { get; init; } = "resources/unsubscribe";
-
-        [Required]
-        public UnsubscribeParams Params { get; init; } = new UnsubscribeParams();
+        public List<SamplingMessage> Messages { get; init; } = [];
+        public ModelPreferences? ModelPreferences { get; init; }
+        public string? SystemPrompt { get; init; }
+        public IncludeContext? IncludeContext { get; init; }
+        public double? Temperature { get; init; }
+        public int MaxTokens { get; init; }
+        public List<string>? StopSequences { get; init; }
+        public Dictionary<string, object>? Metadata { get; init; }
     }
-
-    public record UnsubscribeParams
-    {
-        [Required]
-        [Description("The URI of the resource to unsubscribe from.")]
-        public Uri Uri { get; init; } = new Uri("http://example.com");
-    }
-
-    // Base Client Request Interface
-    public interface IClientRequest : IRequest
-    {
-    }
-
-    // CompleteRequest
-    public record CompleteRequest : IClientRequest
-    {
-        [Required]
-        [Description("The method for a completion request.")]
-        public string Method { get; init; } = "completion/complete";
-
-        [Required]
-        public CompleteParams Params { get; init; } = new CompleteParams();
-    }
-
-    public record CompleteParams
-    {
-        [Required]
-        public CompletionArgument Argument { get; init; } = new CompletionArgument();
-
-        [Required]
-        public CompletionReference Ref { get; init; } = new PromptReference();
-    }
-
-    public record CompletionArgument
-    {
-        [Required]
-        [Description("The name of the argument.")]
-        public string Name { get; init; } = string.Empty;
-
-        [Required]
-        [Description("The value of the argument.")]
-        public string Value { get; init; } = string.Empty;
-    }
-
-    public abstract record CompletionReference
-    {
-        [Required]
-        [Description("The type of the reference.")]
-        public abstract string Type { get; init; }
-    }
-
-    public record PromptReference : CompletionReference
-    {
-        [Required]
-        [Description("The name of the prompt or template.")]
-        public string Name { get; init; } = string.Empty;
-
-        [Required]
-        [Description("The type of the reference.")]
-        public override string Type { get; init; } = "ref/prompt";
-    }
-
-    public record ResourceReference : CompletionReference
-    {
-        [Required]
-        [Description("The URI or URI template of the resource.")]
-        public string Uri { get; init; } = string.Empty;
-
-        [Required]
-        [Description("The type of the reference.")]
-        public override string Type { get; init; } = "ref/resource";
-    }
-
-    public record CreateMessageRequest(CreateMessageRequest.Parameters Params)
-        : IRequest<CreateMessageRequest.Parameters>
-    {
-        public const string MethodName = "messages/create";
-
-        [Required]
-        [Description("The method for creating a message.")]
-        public string Method { get; private init; } = MethodName;
-
-        [Required]
-        public Parameters Params { get; init; } = Params;
-
-        public record Parameters : IParams
-        {
-            public List<SamplingMessage> Messages { get; init; } = [];
-            public ModelPreferences? ModelPreferences { get; init; }
-            public string? SystemPrompt { get; init; }
-            public IncludeContext? IncludeContext { get; init; }
-            public double? Temperature { get; init; }
-            public int MaxTokens { get; init; }
-            public List<string>? StopSequences { get; init; }
-            public Dictionary<string, object>? Metadata { get; init; }
-        }
-    }
+}
 
 
 // /**
@@ -383,12 +385,12 @@ public record ModelHint
     public string? Name { get; init; }
 }
 
-    public enum IncludeContext
-    {
-        None,
-        ThisServer,
-        AllServers
-    }
+public enum IncludeContext
+{
+    None,
+    ThisServer,
+    AllServers
+}
 
 //     export interface SetLevelRequest extends Request {
 //   method: "logging/setLevel";
@@ -399,32 +401,35 @@ public record ModelHint
 //     level: LoggingLevel;
 //   };
 // }
-    public record SetLevelRequest : IRequest
-    {
-        [Required]
-        [Description("The method for setting the logging level.")]
-        public string Method { get; init; } = "logging/setLevel";
+public record SetLevelRequest : IRequest
+{
+    [Required]
+    [Description("The method for setting the logging level.")]
+    public string Method { get; init; } = "logging/setLevel";
 
-        [Required]
-        public SetLevelParams Params { get; init; } = new SetLevelParams();
-    }
+    [Required]
+    public SetLevelParams Params { get; init; } = new SetLevelParams();
+}
 
-    public record SetLevelParams
-    {
-        [Required]
-        [Description("The level of logging that the client wants to receive from the server.")]
-        public LoggingLevel Level { get; init; }
-    }
+public record SetLevelParams
+{
+    [Required]
+    [Description("The level of logging that the client wants to receive from the server.")]
+    public LoggingLevel Level { get; init; }
+}
 
 public record GetPromptRequest : IRequest
 {
+    public const string MethodName = "prompts/get";
+
     [Required]
     [Description("The method for getting a prompt.")]
-    public string Method { get; init; } = "prompts/get";
+    public string Method { get; init; } = MethodName;
 
     [Required]
     public GetPromptParams Params { get; init; } = new GetPromptParams();
 }
+
 public record GetPromptParams
 {
     [Required]
@@ -437,7 +442,9 @@ public record GetPromptParams
 
 public record ListPromptsRequest : IRequest
 {
+    public const string MethodName = "prompts/list";
+
     [Required]
     [Description("The method for listing prompts.")]
-    public string Method { get; init; } = "prompts/list";
+    public string Method { get; init; } = MethodName;
 }

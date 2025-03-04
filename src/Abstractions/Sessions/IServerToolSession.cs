@@ -1,8 +1,7 @@
-using Abstractions.Models;
+namespace Abstractions.Sessions;
+using Models;
 
-namespace Client;
-
-public interface IServerToolConnection
+public interface IServerToolSession
 {
     Task<CallToolResult> CallToolAsync(
         CallToolRequest request,

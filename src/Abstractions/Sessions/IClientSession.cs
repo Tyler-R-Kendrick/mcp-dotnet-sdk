@@ -1,7 +1,7 @@
-namespace Client;
-using Abstractions.Models;
+namespace Abstractions.Sessions;
+using Models;
 
-public interface IClientConnection : IMcpConnection
+public interface IClientSession : IDisposable
 {
     Task<CreateMessageResult> CreateMessageAsync(
         CreateMessageRequest request,

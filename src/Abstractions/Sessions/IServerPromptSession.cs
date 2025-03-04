@@ -1,8 +1,7 @@
-using Abstractions.Models;
+namespace Abstractions.Sessions;
+using Models;
 
-namespace Client;
-
-public interface IServerPromptConnection
+public interface IServerPromptSession
 {
     Task<GetPromptResult> GetPromptAsync(
         GetPromptRequest request,

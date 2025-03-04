@@ -3,6 +3,8 @@ using StreamJsonRpc;
 using Microsoft.VisualStudio.Threading;
 
 namespace Client;
+using Models;
+using Abstractions;
 using Abstractions.Models;
 
 public static class DependencyInjectionExtensions

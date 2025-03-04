@@ -1,8 +1,9 @@
-
 using Microsoft.Extensions.DependencyInjection;
 using StreamJsonRpc;
 
 namespace Server;
+using Models;
+using Abstractions.Sessions;
 
 public static class DependencyInjectionExtensions
 {
@@ -10,12 +11,14 @@ public static class DependencyInjectionExtensions
         this IServiceCollection services,
         Stream stream)
         => services.AddSingleton<JsonRpc>(provider => new(stream));
+
     public static IServiceCollection AddStdioJsonRpc(
         this IServiceCollection services)
         => services.AddSingleton<JsonRpc>(provider => new(
             new HeaderDelimitedMessageHandler(
                 Console.OpenStandardInput(),
                 Console.OpenStandardOutput())));
+
     public static IServiceCollection AddMcpServer(
         this IServiceCollection services,
         Func<IServiceProvider, JsonRpc>? jsonRpcFactory = null,
@@ -44,7 +47,6 @@ public static class DependencyInjectionExtensions
                         listToolsHandler: listToolsHandler,
                         getPromptHandler: getPromptHandler,
                         listPromptsHandler: listPromptsHandler,
-                        createMessageHandler: createMessageHandler,
                         completeHandler: completeHandler,
                         readResourceHandler: readResourceHandler,
                         listResourcesHandler: listResourcesHandler
@@ -53,7 +55,6 @@ public static class DependencyInjectionExtensions
                 rpcServer.StartListening();
                 return server;
             })
-            .AddTransient<IProtocol>(provider => provider.GetRequiredService<DelegatingServer>())
-            .AddTransient<IServer>(provider => provider.GetRequiredService<DelegatingServer>());
+            .AddTransient<IServerSession>(provider => provider.GetRequiredService<DelegatingServer>());
     }
 }

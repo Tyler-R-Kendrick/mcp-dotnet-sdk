@@ -3,9 +3,10 @@ using Nerdbank.Streams;
 
 namespace Client.Tests;
 using Abstractions.Models;
+using Abstractions.Sessions;
 
 [TestClass]
-public partial class ClientConnectionTests : McpTestClassFixture<IClientConnection>
+public partial class ClientConnectionTests : McpTestClassFixture<IClientSession>
 {
     [TestMethod, Timeout(2000)]
     public async Task CreateMessageAsync_ShouldSucceed()

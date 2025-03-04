@@ -28,9 +28,7 @@ public partial class ClientNegotiation(
         var client = transport.Attach<IMcpNegotiation>();
         var response = await client.InitializeAsync(request, token);
 
-        await client.NotifyAsync(
-            new InitializedNotification(),
-            token);
+        await client.NotifyAsync(new(), token);
 
         return response;
     }

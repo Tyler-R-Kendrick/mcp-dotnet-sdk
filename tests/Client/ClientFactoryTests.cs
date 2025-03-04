@@ -3,7 +3,9 @@ using Nerdbank.Streams;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Client.Tests;
+using Abstractions;
 using Abstractions.Models;
+using Abstractions.Sessions;
 
 [TestClass]
 public partial class ClientFactoryTests : McpTestClassFixture<IClientFactory>

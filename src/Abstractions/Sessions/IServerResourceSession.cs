@@ -1,8 +1,7 @@
-using Abstractions.Models;
+namespace Abstractions.Sessions;
+using Models;
 
-namespace Client;
-
-public interface IServerResourceConnection
+public interface IServerResourceSession
 {
     Task<ReadResourceResult> ReadResourceAsync(
         ReadResourceRequest request,
