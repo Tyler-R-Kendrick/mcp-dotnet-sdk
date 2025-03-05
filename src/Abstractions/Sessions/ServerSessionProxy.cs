@@ -3,8 +3,7 @@ using Models;
 
 public partial class ServerSessionProxy(
     IServerSession connection,
-    ServerCapabilities serverCapabilities,
-    ClientCapabilities clientCapabilities)
+    ServerCapabilities serverCapabilities)
     : IServerSession
 {
     private bool HasCapability(string messageType)
@@ -35,7 +34,17 @@ public partial class ServerSessionProxy(
             ? handle()
             : throw new InvalidOperationException($"Server does not support {methodName}.");
     }
+}
 
+public partial class ServerSessionProxy : IMcpUtility
+{
+    public Task CancelAsync(
+        CancelledNotification notification,
+        CancellationToken token = default)
+    {
+        return connection.CancelAsync(notification, token);
+    }
+    
     public virtual void Dispose()
     {
         connection.Dispose();

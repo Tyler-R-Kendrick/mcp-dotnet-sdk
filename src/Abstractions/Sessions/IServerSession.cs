@@ -6,6 +6,6 @@ public interface IServerSession
     IServerPromptSession,
     IServerResourceSession,
     IServerUtilitySession,
-    IDisposable
+    IMcpUtility
 {
 }

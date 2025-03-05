@@ -14,16 +14,22 @@ namespace Abstractions.Models;
         [Required]
         TParams Params { get; }
     }
-    
-    // CancelledNotification
-    public record CancelledNotification : INotification<CancelledNotification.Parameters>, IClientNotification, IServerNotificaiton
+
+    public abstract record BaseNotification<TParams>(string methodName, TParams @params)
+        : INotification<TParams>
     {
         [Required]
         [Description("The method indicating a cancelled notification.")]
-        public string Method { get; init; } = "notifications/cancelled";
-
-        [Required]
-        public Parameters Params { get; init; } = new Parameters();
+        public string Method { get; init; } = methodName;
+        public virtual TParams Params { get; init; } = @params;
+    }
+    
+    // CancelledNotification
+    public record CancelledNotification(CancelledNotification.Parameters @Params)
+        : BaseNotification<CancelledNotification.Parameters>(MethodName,@Params),
+            IClientNotification, IServerNotificaiton
+    {
+        public const string MethodName = "notifications/cancelled";
         public record Parameters
         {
             [Required]
@@ -36,14 +42,11 @@ namespace Abstractions.Models;
     }
 
     // InitializedNotification
-    public record InitializedNotification : INotification, IClientNotification
+    public record InitializedNotification(InitializedNotification.Parameters @Params)
+        : BaseNotification<InitializedNotification.Parameters>(MethodName, @Params),
+        IClientNotification
     {
-        [Required]
-        [Description("The method indicating an initialized notification.")]
-        public string Method { get; init; } = "notifications/initialized";
-
-        [Description("Additional metadata for the notification.")]
-        public Parameters Params { get; init; } = new Parameters();
+        public const string MethodName = "notifications/initialized";
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -52,14 +55,11 @@ namespace Abstractions.Models;
     }
 
     // ProgressNotification
-    public record ProgressNotification : INotification, IClientNotification, IServerNotificaiton
+    public record ProgressNotification(ProgressNotification.Parameters @Params)
+        : BaseNotification<ProgressNotification.Parameters>(MethodName, @Params),
+            IClientNotification, IServerNotificaiton
     {
-        [Required]
-        [Description("The method indicating a progress notification.")]
-        public string Method { get; init; } = "notifications/progress";
-
-        [Required]
-        public Parameters Params { get; init; } = new Parameters();
+        public const string MethodName = "notifications/progress";
         public record Parameters
         {
             [Required]
@@ -81,14 +81,11 @@ namespace Abstractions.Models;
     }
 
     // RootsListChangedNotification
-    public record RootsListChangedNotification : INotification, IClientNotification
+    public record RootsListChangedNotification(RootsListChangedNotification.Parameters @Params)
+        : BaseNotification<RootsListChangedNotification.Parameters>(MethodName, @Params),
+            IClientNotification
     {
-        [Required]
-        [Description("The method indicating a roots list changed notification.")]
-        public string Method { get; init; } = "notifications/roots/list_changed";
-
-        [Description("Additional metadata for the roots list changed notification.")]
-        public Parameters Params { get; init; } = new Parameters();
+        public const string MethodName = "notifications/roots/list_changed";
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -101,30 +98,17 @@ namespace Abstractions.Models;
     {
     }
 
-
-// export type ServerNotification =
-//   | CancelledNotification
-//   | ProgressNotification
-//   | LoggingMessageNotification
-//   | ResourceUpdatedNotification
-//   | ResourceListChangedNotification
-//   | ToolListChangedNotification
-//   | PromptListChangedNotification;
     public interface IServerNotificaiton : INotification
     {
     }
 
     // ResourceListChangedNotification
     public record ResourceListChangedNotification(
-        ResourceListChangedNotification.Parameters Params)
-        : INotification<ResourceListChangedNotification.Parameters>, IServerNotificaiton
+        ResourceListChangedNotification.Parameters @Params)
+        : BaseNotification<ResourceListChangedNotification.Parameters>(MethodName, @Params),
+            IServerNotificaiton
     {
-        [Required]
-        [Description("The method indicating a resource list changed notification.")]
-        public string Method { get; init; } = "notifications/resources/list_changed";
-
-        [Description("Additional metadata for the resource list changed notification.")]
-        public Parameters Params { get; init; } = Params;
+        public const string MethodName = "notifications/resources/list_changed";
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -134,15 +118,11 @@ namespace Abstractions.Models;
 
     // ResourceUpdatedNotification
     public record ResourceUpdatedNotification(
-        ResourceUpdatedNotification.Parameters Params)
-        : INotification<ResourceUpdatedNotification.Parameters>, IServerNotificaiton
+        ResourceUpdatedNotification.Parameters @Params)
+        : BaseNotification<ResourceUpdatedNotification.Parameters>(MethodName, @Params),
+            IServerNotificaiton
     {
-        [Required]
-        [Description("The method indicating a resource updated notification.")]
-        public string Method { get; init; } = "notifications/resources/updated";
-
-        [Required]
-        public Parameters Params { get; init; } = Params;
+        public const string MethodName = "notifications/resources/updated";
         public record Parameters
         {
             [Required]
@@ -153,15 +133,11 @@ namespace Abstractions.Models;
 
     // PromptListChangedNotification
     public record PromptListChangedNotification(
-        PromptListChangedNotification.Parameters Params)
-        : INotification<PromptListChangedNotification.Parameters>, IServerNotificaiton
+        PromptListChangedNotification.Parameters @Params)
+        : BaseNotification<PromptListChangedNotification.Parameters>(MethodName, @Params),
+            IServerNotificaiton
     {
-        [Required]
-        [Description("The method indicating a prompt list changed notification.")]
-        public string Method { get; private init; } = "notifications/prompts/list_changed";
-
-        [Description("Additional metadata for the prompt list changed notification.")]
-        public Parameters Params { get; init; } = Params;
+        public const string MethodName = "notifications/prompts/list_changed";
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -171,15 +147,11 @@ namespace Abstractions.Models;
 
     // ToolListChangedNotification
     public record ToolListChangedNotification(
-        ToolListChangedNotification.Parameters Params)
-        : INotification<ToolListChangedNotification.Parameters>, IServerNotificaiton
+        ToolListChangedNotification.Parameters @Params)
+        : BaseNotification<ToolListChangedNotification.Parameters>(MethodName, @Params),
+            IServerNotificaiton
     {
-        [Required]
-        [Description("The method indicating a tool list changed notification.")]
-        public string Method { get; private init; } = "notifications/tools/list_changed";
-
-        [Description("Additional metadata for the tool list changed notification.")]
-        public Parameters Params { get; init; } = Params;
+        public const string MethodName = "notifications/tools/list_changed";
         public record Parameters
         {
             [Description("Reserved parameter for attaching additional metadata.")]
@@ -189,16 +161,11 @@ namespace Abstractions.Models;
 
     // LoggingMessageNotification
     public record LoggingMessageNotification(
-        LoggingMessageNotification.Parameters Params)
-        : INotification<LoggingMessageNotification.Parameters>, IServerNotificaiton
+        LoggingMessageNotification.Parameters @Params)
+        : BaseNotification<LoggingMessageNotification.Parameters>(MethodName, @Params),
+            IServerNotificaiton
     {
         public const string MethodName = "notifications/message";
-        [Required]
-        [Description("The method indicating a logging message notification.")]
-        public string Method { get; private init; } = MethodName;
-
-        [Required]
-        public Parameters Params { get; init; } = Params;
         public record Parameters
         {
             [Required]
