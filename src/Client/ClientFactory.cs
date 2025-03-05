@@ -17,14 +17,14 @@ internal class ClientFactory(
         PingRequest request,
         CancellationToken token = default)
     {
-        using ClientNegotiation client = new(transport, capabilities);
+        using ClientNegotiation client = new(transport);
         return await client.PingAsync(request, token);
     }
 
     public async Task<IClientSession> ConnectAsync(
         CancellationToken token = default)
     {
-        using ClientNegotiation client = new(transport, capabilities);
+        using ClientNegotiation client = new(transport);
         InitializeRequest request = new(new());
         var result = await client.InitializeAsync(
             request,
@@ -33,7 +33,7 @@ internal class ClientFactory(
         {
             throw new InvalidOperationException("Protocol version mismatch.");
         }
-        await client.NotifyAsync(new(), token);
+        await client.NotifyAsync(new(new()), token);
 
         IServerSession serverConnection = transport.Attach<IServerSession>();
         return new DelegateClientSession(

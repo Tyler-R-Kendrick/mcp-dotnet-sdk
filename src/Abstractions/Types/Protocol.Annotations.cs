@@ -2,63 +2,64 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace Abstractions.Models;
-    // Annotated Base Type
-    public interface IAnnotated
-    {
-        [Description("Annotations for the object.")]
-        Annotations? Annotations { get; set; }
-    }
-    
-    public interface IResource : IAnnotated
-    {
-        [Required]
-        [Description("The URI of this resource.")]
-        public Uri Uri { get; init; }
 
-        [Required]
-        [Description("A human-readable name for this resource.")]
-        public string Name { get; init; }
+// Annotated Base Type
+public interface IAnnotated
+{
+    [Description("Annotations for the object.")]
+    Annotations? Annotations { get; set; }
+}
 
-        [Description("A description of what this resource represents.")]
-        public string? Description { get; init; }
+public interface IResource : IAnnotated
+{
+    [Required]
+    [Description("The URI of this resource.")]
+    public Uri Uri { get; init; }
 
-        [Description("The MIME type of this resource, if known.")]
-        public string? MimeType { get; init; }
-    }
+    [Required]
+    [Description("A human-readable name for this resource.")]
+    public string Name { get; init; }
+
+    [Description("A description of what this resource represents.")]
+    public string? Description { get; init; }
+
+    [Description("The MIME type of this resource, if known.")]
+    public string? MimeType { get; init; }
+}
 
 
-    // Annotations
-    public record Annotations
-    {
-        [Description("The audience this object is intended for.")]
-        public List<Role>? Audience { get; init; }
+// Annotations
+public record Annotations
+{
+    [Description("The audience this object is intended for.")]
+    public List<Role>? Audience { get; init; }
 
-        [Range(0, 1, ErrorMessage = "Priority must be between 0 and 1.")]
-        [Description("The priority of the object, where 1 is most important and 0 is least important.")]
-        public float? Priority { get; init; }
-    }
+    [Range(0, 1, ErrorMessage = "Priority must be between 0 and 1.")]
+    [Description("The priority of the object, where 1 is most important and 0 is least important.")]
+    public float? Priority { get; init; }
+}
 
-    // AnnotatedResource
-    public record AnnotatedResource : IAnnotated
-    {
-        [Required]
-        [Description("The URI of the resource.")]
-        public Uri Uri { get; init; } = new Uri("http://example.com");
+// AnnotatedResource
+public record AnnotatedResource : IAnnotated
+{
+    [Required]
+    [Description("The URI of the resource.")]
+    public Uri Uri { get; init; } = new Uri("http://example.com");
 
-        [Description("Annotations for the resource.")]
-        public Annotations? Annotations { get; set; }
-    }
+    [Description("Annotations for the resource.")]
+    public Annotations? Annotations { get; set; }
+}
 
-    // AnnotatedContent
-    public record AnnotatedContent : IAnnotated
-    {
-        [Required]
-        [Description("The content of the object.")]
-        public string Content { get; init; } = string.Empty;
+// AnnotatedContent
+public record AnnotatedContent : IAnnotated
+{
+    [Required]
+    [Description("The content of the object.")]
+    public string Content { get; init; } = string.Empty;
 
-        [Description("Annotations for the content.")]
-        public Annotations? Annotations { get; set; }
-    }
+    [Description("Annotations for the content.")]
+    public Annotations? Annotations { get; set; }
+}
 
 // export interface ResourceTemplate extends Annotated {
 //   /**

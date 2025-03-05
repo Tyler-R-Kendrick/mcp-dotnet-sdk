@@ -1,6 +1,5 @@
-using Abstractions.Models;
-
-namespace Client;
+namespace Abstractions;
+using Models;
 
 public interface IMcpUtilities : IDisposable
 {

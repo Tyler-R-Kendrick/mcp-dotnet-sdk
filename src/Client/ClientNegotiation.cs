@@ -5,9 +5,7 @@ using Abstractions.Models;
 using Microsoft.VisualStudio.Threading;
 using StreamJsonRpc;
 
-public partial class ClientNegotiation(
-    JsonRpc transport,
-    ClientCapabilities capabilities)
+public partial class ClientNegotiation(JsonRpc transport)
     : IMcpNegotiation
 {
     public async Task<PingResult> PingAsync(
@@ -28,7 +26,7 @@ public partial class ClientNegotiation(
         var client = transport.Attach<IMcpNegotiation>();
         var response = await client.InitializeAsync(request, token);
 
-        await client.NotifyAsync(new(), token);
+        await client.NotifyAsync(new(new()), token);
 
         return response;
     }

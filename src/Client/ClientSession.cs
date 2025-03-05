@@ -8,7 +8,7 @@ public partial class DelegateClientSession(
     IServerSession serverSession,
     ServerCapabilities serverCapabilities,
     ClientCapabilities clientCapabilities)
-    : ServerSessionProxy(serverSession, serverCapabilities, clientCapabilities), IMcpSession 
+    : ServerSessionProxy(serverSession, serverCapabilities), IMcpSession 
 {
     public OnCreateMessageAsync? OnCreateMessageAsync { get; set; } = default!;
     public async Task<CreateMessageResult> CreateMessageAsync(
