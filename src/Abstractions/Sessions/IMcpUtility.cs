@@ -10,4 +10,8 @@ public interface IMcpUtility : IDisposable
     Task CancelAsync(
         CancelledNotification notification,
         CancellationToken token = default);
+
+    Task<ProgressToken> ProgressAsync(
+        ProgressNotification notification,
+        CancellationToken token = default);
 }

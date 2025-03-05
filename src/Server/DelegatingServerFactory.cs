@@ -2,10 +2,12 @@ using StreamJsonRpc;
 
 namespace Server;
 using Models;
+using Abstractions;
 
 internal class DelegatedServerFactory(Func<JsonRpc> transportFactory)
 {
     public DelegatingServer Create(
+        IMcpUtilities utilities,
         OnCallToolAsync? callToolHandler = null,
         OnListToolsAsync? listToolsHandler = null,
         OnGetPromptAsync? getPromptHandler = null,
@@ -13,7 +15,7 @@ internal class DelegatedServerFactory(Func<JsonRpc> transportFactory)
         OnCompleteAsync? completeHandler = null,
         OnReadResourceAsync? readResourceHandler = null,
         OnListResourcesAsync? listResourcesHandler = null)
-    => new(transportFactory())
+    => new(transportFactory(), utilities)
     {
         CallToolHandler = callToolHandler,
         ListToolsHandler = listToolsHandler,

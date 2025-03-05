@@ -3,6 +3,7 @@ using StreamJsonRpc;
 
 namespace Server;
 using Models;
+using Abstractions;
 using Abstractions.Sessions;
 
 public static class DependencyInjectionExtensions
@@ -38,11 +39,13 @@ public static class DependencyInjectionExtensions
             .AddTransient<JsonRpc>(provider =>
                 provider.GetRequiredService<Func<JsonRpc>>()())
             .AddTransient<DelegatedServerFactory>()
+            .AddTransient<IMcpUtilities, McpUtilities>()
             .AddTransient(provider =>
             {
                 var rpcServer = provider.GetRequiredService<JsonRpc>();
                 var server = provider.GetRequiredService<DelegatedServerFactory>()
                     .Create(
+                        utilities: provider.GetRequiredService<IMcpUtilities>(),
                         callToolHandler: callToolHandler,
                         listToolsHandler: listToolsHandler,
                         getPromptHandler: getPromptHandler,

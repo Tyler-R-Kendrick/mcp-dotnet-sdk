@@ -38,6 +38,20 @@ public partial class ServerSessionProxy(
 
 public partial class ServerSessionProxy : IMcpUtility
 {
+    public Task<ProgressToken> ProgressAsync(
+        ProgressNotification notification,
+        CancellationToken token = default)
+    {
+        return connection.ProgressAsync(notification, token);
+    }
+
+    public Task<PingResult> PingAsync(
+        PingRequest request,
+        CancellationToken token = default)
+    {
+        return connection.PingAsync(request, token);
+    }
+
     public Task CancelAsync(
         CancelledNotification notification,
         CancellationToken token = default)
@@ -65,13 +79,6 @@ public partial class ServerSessionProxy : IServerUtilitySession
         CancellationToken token = default)
     {
         return connection.LogAsync(notification, token);
-    }
-
-    public Task<PingResult> PingAsync(
-        PingRequest request,
-        CancellationToken token = default)
-    {
-        return connection.PingAsync(request, token);
     }
 }
 

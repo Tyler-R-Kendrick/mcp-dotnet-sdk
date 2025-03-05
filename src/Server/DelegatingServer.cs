@@ -8,17 +8,22 @@ using Abstractions.Models;
 using Abstractions.Sessions;
 
 internal partial class DelegatingServer(
-    JsonRpc transport)
+    JsonRpc transport,
+    IMcpUtilities utilities)
     : IServerSession, IDisposable
 {
-    public void Dispose() => transport.Dispose();
+    public void Dispose() 
+    {
+        transport.Dispose();
+        utilities.Dispose();
+    }
 }
 
 internal partial class DelegatingServer : IServerToolSession
 {
     public OnCallToolAsync? CallToolHandler;
     public Task<CallToolResult> CallToolAsync(
-        Abstractions.Models.CallToolRequest request,
+        CallToolRequest request,
         CancellationToken token = default)
     {
         return CallToolHandler?.Invoke(request, token)
@@ -27,7 +32,7 @@ internal partial class DelegatingServer : IServerToolSession
 
     public OnListToolsAsync? ListToolsHandler;
     public Task<ListToolsResult> ListToolsAsync(
-        Abstractions.Models.ListToolsRequest request,
+        ListToolsRequest request,
         CancellationToken token = default)
     {
         return ListToolsHandler?.Invoke(request, token)
@@ -39,7 +44,7 @@ internal partial class DelegatingServer : IServerPromptSession
 {
     public OnGetPromptAsync? GetPromptHandler;
     public Task<GetPromptResult> GetPromptAsync(
-        Abstractions.Models.GetPromptRequest request,
+        GetPromptRequest request,
         CancellationToken token = default)
     {
         return GetPromptHandler?.Invoke(request, token)
@@ -48,7 +53,7 @@ internal partial class DelegatingServer : IServerPromptSession
 
     public OnListPromptsAsync? ListPromptsHandler;
     public Task<ListPromptsResult> ListPromptsAsync(
-        Abstractions.Models.ListPromptsRequest request,
+        ListPromptsRequest request,
         CancellationToken token = default)
     {
         return ListPromptsHandler?.Invoke(request, token)
@@ -60,7 +65,7 @@ internal partial class DelegatingServer : IServerUtilitySession
 {
     public OnLogAsync? LogHandler;
     public Task LogAsync(
-        Abstractions.Models.LoggingMessageNotification request,
+        LoggingMessageNotification request,
         CancellationToken token = default)
     {
         return LogHandler?.Invoke(request, token)
@@ -69,7 +74,7 @@ internal partial class DelegatingServer : IServerUtilitySession
 
     public OnCompleteAsync? CompleteHandler;
     public Task<CompleteResult> CompleteAsync(
-        Abstractions.Models.CompleteRequest request,
+        CompleteRequest request,
         CancellationToken token = default)
     {
         return CompleteHandler?.Invoke(request, token)
@@ -81,7 +86,7 @@ internal partial class DelegatingServer : IServerResourceSession
 {
     public OnReadResourceAsync? ReadResourceHandler;
     public Task<ReadResourceResult> ReadResourceAsync(
-        Abstractions.Models.ReadResourceRequest request,
+        ReadResourceRequest request,
         CancellationToken token = default)
     {
         return ReadResourceHandler?.Invoke(request, token)
@@ -90,7 +95,7 @@ internal partial class DelegatingServer : IServerResourceSession
 
     public OnListResourcesAsync? ListResourcesHandler;
     public Task<ListResourcesResult> ListResourcesAsync(
-        Abstractions.Models.ListResourcesRequest request,
+        ListResourcesRequest request,
         CancellationToken token = default)
     {
         return ListResourcesHandler?.Invoke(request, token)
@@ -98,11 +103,36 @@ internal partial class DelegatingServer : IServerResourceSession
     }
 }
 
+internal partial class DelegatingServer : IMcpUtilities
+{
+    public Task CancelAsync(
+        CancelledNotification notification,
+        CancellationToken token = default)
+    {
+        return utilities.CancelAsync(notification, token);
+    }
+
+    public Task<ProgressToken> ProgressAsync(
+        ProgressNotification notification,
+        CancellationToken token = default)
+    {
+        return utilities.ProgressAsync(notification, token);
+    }
+    
+    public Task<PingResult> PingAsync(
+        PingRequest request,
+        CancellationToken token = default)
+    {
+        return utilities.PingAsync(request, token);
+    }
+
+}
+
 internal partial class DelegatingServer : IMcpNegotiation
 {
     public OnInitializeAsync? InitializeHandler;
     public Task<InitializeResult> InitializeAsync(
-        Abstractions.Models.InitializeRequest request,
+        InitializeRequest request,
         CancellationToken token = default)
     {
         return InitializeHandler?.Invoke(request, token)
@@ -111,19 +141,10 @@ internal partial class DelegatingServer : IMcpNegotiation
 
     public OnInitializedAsync? InitializedHandler;
     public Task NotifyAsync(
-        Abstractions.Models.InitializedNotification request,
+        InitializedNotification request,
         CancellationToken token = default)
     {
         return InitializedHandler?.Invoke(request, token)
             ?? throw new InvalidOperationException("Initialized handler is not set.");
-    }
-    
-    public OnPingAsync? PingHandler = delegate { return Task.FromResult(new PingResult()); };
-    public Task<PingResult> PingAsync(
-        Abstractions.Models.PingRequest request,
-        CancellationToken token = default)
-    {
-        return PingHandler?.Invoke(request, token)
-            ?? throw new InvalidOperationException("Ping handler is not set.");
     }
 }
